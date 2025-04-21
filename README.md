@@ -1,4 +1,3 @@
-I’ve drafted a standalone Python script (read_nc.py) that:
 
 Scans a directory for your NetCDF files
 
