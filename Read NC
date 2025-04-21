@@ -1,0 +1,66 @@
+"""
+read_nc.py
+
+This script reads NetCDF files generated from GeoTIFF stacks (e.g., SWSM_Layer1_YYYY_QX.nc) and extracts
+variables for analysis or further processing. Designed for easy integration and modification for GitHub repositories.
+"""
+import os
+import numpy as np
+import netCDF4 as nc
+
+# ---------------------------------
+# Configuration
+# ---------------------------------
+# Directory containing the NetCDF files
+nc_dir = r'F:\Project\SM_Global\SWSM\L123'
+
+# List all .nc files in the directory
+nc_files = [os.path.join(nc_dir, f) for f in os.listdir(nc_dir) if f.endswith('.nc')]
+
+# ---------------------------------
+# Main Reading Routine
+# ---------------------------------
+def read_nc_file(filepath):
+    """
+    Read a single NetCDF file and return its data variables.
+
+    Parameters:
+    -------------
+    filepath : str
+        Full path to the NetCDF file.
+
+    Returns:
+    -------------
+    data_dict : dict
+        A dictionary containing 'time', 'Latitude', 'Longitude', and each layer 'L1','L2','L3'.
+    """
+    data_dict = {}
+    # Open the NetCDF dataset
+    with nc.Dataset(filepath, mode='r') as ds:
+        # Read coordinate variables
+        data_dict['time'] = ds.variables['time'][:]            # time index
+        data_dict['Latitude'] = ds.variables['Latitude'][:]    # latitude values
+        data_dict['Longitude'] = ds.variables['Longitude'][:]  # longitude values
+
+        # Read soil moisture layers
+        for layer in ['L1', 'L2', 'L3']:
+            if layer in ds.variables:
+                data_dict[layer] = ds.variables[layer][:]         # shape: (time, lat, lon)
+            else:
+                print(f"Warning: {layer} not found in {filepath}")
+    return data_dict
+
+
+if __name__ == '__main__':
+    # Loop over all NetCDF files and load data
+    for nc_path in nc_files:
+        print(f"Reading {nc_path}...")
+        try:
+            data = read_nc_file(nc_path)
+            # Example: print shapes
+            print(f"  Time steps: {data['time'].shape}")
+            print(f"  Lat: {data['Latitude'].size}, Lon: {data['Longitude'].size}")
+            print(f"  L1 data shape: {data['L1'].shape}")
+        except Exception as e:
+            print(f"Error reading {nc_path}: {e}")
+    print("All files processed.")
